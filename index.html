@@ -1600,8 +1600,8 @@
             
             sizeSelect.innerHTML = '<option value="">Select a size</option>';
             
-            if (category && productCode) {
-                const product = products[category].find(p => p.code === productCode);
+            if (category && productCode && products[category] && products[category].products) {
+                const product = products[category].products.find(p => p.code === productCode);
                 if (product) {
                     sizeSelect.disabled = false;
                     product.sizes.forEach(size => {
