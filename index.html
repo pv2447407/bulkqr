@@ -1,0 +1,2663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Product Management System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .size-checkboxes {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .size-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .size-checkbox input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        .product-list {
+            margin-top: 20px;
+        }
+
+        .product-category {
+            margin-bottom: 25px;
+        }
+
+        .product-category h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .product-items {
+            display: grid;
+            gap: 10px;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .product-item:hover {
+            background: #f1f5f9;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-code {
+            font-weight: 600;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .product-sizes {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .product-actions button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .qr-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+            justify-items: center;
+        }
+
+        .qr-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 4px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            box-sizing: border-box;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .qr-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-item canvas {
+            margin: 0 auto;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .qr-label {
+            color: #000;
+            margin-top: 2px;
+            word-break: break-all;
+            text-align: center;
+            width: 100%;
+            line-height: 1;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .batch-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            padding: 12px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #991b1b;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .warning.active {
+            display: block;
+        }
+
+        .suggestion {
+            padding: 10px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            color: #1e40af;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .id-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .id-info-item {
+            text-align: center;
+        }
+
+        .id-info-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .id-info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .pagination-controls button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .pagination-controls button:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .qr-page {
+            display: none;
+        }
+
+        .qr-page.active {
+            display: grid;
+        }
+
+        .config-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .config-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .config-section h3 {
+            margin-bottom: 15px;
+            color: #475569;
+            font-size: 16px;
+        }
+
+        .input-suffix {
+            margin-left: 5px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .config-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+        }
+
+        .preview-info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .history-controls {
+            margin-bottom: 20px;
+        }
+
+        .history-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .history-item {
+            background: #f8fafc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-filename {
+            font-weight: 600;
+            color: #334155;
+            font-family: monospace;
+        }
+
+        .history-timestamp {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .history-detail {
+            color: #475569;
+        }
+
+        .history-detail strong {
+            color: #334155;
+        }
+
+        .history-stats {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .progress-overlay.active {
+            display: flex;
+        }
+
+        .progress-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-width: 400px;
+            text-align: center;
+        }
+
+        .progress-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .progress-details {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Product Management</h1>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('manage')">Manage Products</button>
+                <button class="tab" onclick="switchTab('generate')">Generate QR Codes</button>
+                <button class="tab" onclick="switchTab('config')">Configuration</button>
+                <button class="tab" onclick="switchTab('history')">Print History</button>
+            </div>
+
+            <div id="manage-tab" class="tab-content active">
+                <h2>Product Management</h2>
+                
+                <div class="management-controls">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <button onclick="openAddCategoryModal()">+ Add Category</button>
+                            <button onclick="openAddProductModal()" style="margin-left: 10px;">+ Add Product</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-list" id="product-list"></div>
+            </div>
+
+            <div id="generate-tab" class="tab-content">
+                <h2>Generate QR Codes</h2>
+                
+                <div class="selection-grid">
+                    <div class="form-group">
+                        <label for="gen-category">Category</label>
+                        <select id="gen-category" onchange="updateGenProductDropdown()">
+                            <option value="">Select a category</option>
+                            <option value="crystals">Crystals</option>
+                            <option value="keychains">Keychains</option>
+                            <option value="lightBases">Light Bases</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gen-product">Product</label>
+                        <select id="gen-product" onchange="updateGenSizeDropdown()" disabled>
+                            <option value="">Select a product</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gen-size">Size</label>
+                        <select id="gen-size" onchange="updateStartNumberSuggestion()" disabled>
+                            <option value="">Select a size</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="batch-controls">
+                    <div class="form-group">
+                        <label for="start-number">Start Number (0001-9999)</label>
+                        <input type="number" id="start-number" min="1" max="9999" placeholder="0001">
+                        <div id="suggestion" class="suggestion" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" min="1" value="1" placeholder="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year-month">Year-Month (YYMM)</label>
+                        <input type="text" id="year-month" pattern="[0-9]{4}" maxlength="4" placeholder="2411">
+                    </div>
+                </div>
+
+                <div id="gap-warning" class="warning"></div>
+
+                <div id="id-info" class="id-info" style="display: none;">
+                    <div class="id-info-item">
+                        <div class="id-info-label">Last Used ID</div>
+                        <div class="id-info-value" id="last-used-id">-</div>
+                    </div>
+                    <div class="id-info-item">
+                        <div class="id-info-label">Total Generated</div>
+                        <div class="id-info-value" id="total-generated">0</div>
+                    </div>
+                    <div class="id-info-item">
+                        <div class="id-info-label">Current Range</div>
+                        <div class="id-info-value" id="current-range">-</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button onclick="generateBatchQR()" id="generate-batch-btn" disabled>Generate QR Codes</button>
+                    <button onclick="clearQRGrid()" class="secondary" style="margin-left: 10px;">Clear</button>
+                    <button onclick="exportToPDF()" id="export-pdf-btn" disabled style="margin-left: 10px; background: #059669;">Export PDF</button>
+                </div>
+
+                <div id="pagination-container" style="display: none;">
+                    <div class="pagination-controls">
+                        <button onclick="previousPage()" id="prev-btn" disabled>Previous</button>
+                        <div class="page-info" id="page-info">Page 1 of 1</div>
+                        <button onclick="nextPage()" id="next-btn" disabled>Next</button>
+                    </div>
+                </div>
+
+                <div id="qr-container" style="display: none;">
+                    <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                        <span style="color: #64748b; font-size: 14px;">
+                            Layout: <strong id="layout-info">7×9 grid</strong> | 
+                            QR Size: <strong id="qr-size-info">70%</strong> | 
+                            Text: <strong id="text-info">Shown</strong> | 
+                            Error Correction: <strong id="error-info">Medium</strong>
+                        </span>
+                    </div>
+                    <div id="qr-grid" class="qr-grid"></div>
+                </div>
+            </div>
+
+            <div id="config-tab" class="tab-content">
+                <h2>PDF Configuration</h2>
+                
+                <div class="config-sections">
+                    <div class="config-section">
+                        <h3>Page Layout</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-rows">Rows</label>
+                                <input type="number" id="config-rows" min="1" max="20" value="9">
+                            </div>
+                            <div class="form-group">
+                                <label for="config-cols">Columns</label>
+                                <input type="number" id="config-cols" min="1" max="20" value="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Label Dimensions (mm)</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-label-width">Label Width</label>
+                                <input type="number" id="config-label-width" min="10" max="100" step="0.1" value="25.4">
+                            </div>
+                            <div class="form-group">
+                                <label for="config-label-height">Label Height</label>
+                                <input type="number" id="config-label-height" min="10" max="100" step="0.1" value="25.4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Page Margins (mm)</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-margin-top">Top Margin</label>
+                                <input type="text" id="config-margin-top" placeholder="auto" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-margin-bottom">Bottom Margin</label>
+                                <input type="text" id="config-margin-bottom" placeholder="auto" disabled>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-margin-left">Left Margin</label>
+                                <input type="text" id="config-margin-left" placeholder="auto" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-margin-right">Right Margin</label>
+                                <input type="text" id="config-margin-right" placeholder="auto" disabled>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="config-auto-margins" checked style="width: auto; margin-right: 8px;">
+                                <span>Auto-calculate margins to center grid</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Gaps Between Labels (mm)</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-gap-horizontal">Horizontal Gap</label>
+                                <input type="number" id="config-gap-horizontal" min="0" max="10" step="0.1" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="config-gap-vertical">Vertical Gap</label>
+                                <input type="number" id="config-gap-vertical" min="0" max="10" step="0.1" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>QR Code Settings</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-qr-size">QR Code Size (% of label)</label>
+                                <input type="number" id="config-qr-size" min="30" max="90" value="70">
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-error-correction">Error Correction Level</label>
+                                <select id="config-error-correction">
+                                    <option value="L">Low (7%)</option>
+                                    <option value="M" selected>Medium (15%)</option>
+                                    <option value="Q">Quartile (25%)</option>
+                                    <option value="H">High (30%)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-pdf-quality">PDF Quality</label>
+                                <select id="config-pdf-quality">
+                                    <option value="0.5">Draft (0.5)</option>
+                                    <option value="0.8">Good (0.8)</option>
+                                    <option value="1.0" selected>High (1.0)</option>
+                                    <option value="1.5">Very High (1.5)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="config-show-text" checked style="width: auto; margin-right: 8px;">
+                                    <span>Show text labels</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Logo Settings</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 0;">
+                                    <input type="checkbox" id="config-logo-enabled" style="width: auto; margin-right: 8px; margin: 0 8px 0 0;">
+                                    <span>Enable logo in QR codes</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-logo-size">Logo Size (% of QR code)</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="config-logo-size" min="10" max="30" value="20" style="flex: 1; min-width: 0;">
+                                    <span class="input-suffix" style="margin-left: 4px; white-space: nowrap;">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="config-logo-padding">Logo Background Padding</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="config-logo-padding" min="0" max="10" value="2" style="flex: 1; min-width: 0;">
+                                    <span class="input-suffix" style="margin-left: 4px; white-space: nowrap;">px</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-logo-upload">Upload Custom Logo</label>
+                                <input type="file" id="config-logo-upload" accept="image/*" style="width: 100%;">
+                                <div id="logo-preview" style="margin-top: 10px; display: none;">
+                                    <img id="logo-preview-img" style="max-width: 80px; max-height: 80px; border: 1px solid #e2e8f0; padding: 4px; border-radius: 4px; display: block;">
+                                    <button onclick="removeLogo()" class="danger" style="margin-top: 5px; padding: 4px 8px; font-size: 12px;">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Preview</h3>
+                        <div id="config-preview" class="config-preview">
+                            <div class="preview-info">
+                                <p><strong>Labels per page:</strong> <span id="preview-per-page">63</span></p>
+                                <p><strong>Effective label area:</strong> <span id="preview-label-area">25.4 × 25.4 mm</span></p>
+                                <p><strong>QR code size:</strong> <span id="preview-qr-size">17.8 × 17.8 mm</span></p>
+                                <p><strong>Page utilization:</strong> <span id="preview-utilization">85%</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button onclick="saveConfiguration()" style="background: #059669;">Save Configuration</button>
+                        <button onclick="resetConfiguration()" class="secondary" style="margin-left: 10px;">Reset to Defaults</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history-tab" class="tab-content">
+                <h2>Print History</h2>
+                
+                <div class="history-controls">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="history-search" placeholder="Search by filename, product code, or date...">
+                        </div>
+                        <div class="form-group">
+                            <button onclick="clearPrintHistory()" class="danger">Clear All History</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="history-list" class="history-list">
+                    <div class="history-empty">
+                        <p>No print history found. Export some PDFs to see them here!</p>
+                    </div>
+                </div>
+
+                <div class="history-stats" id="history-stats" style="display: none;">
+                    <h3>Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Exports</div>
+                            <div class="stat-value" id="stat-total-exports">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total QR Codes</div>
+                            <div class="stat-value" id="stat-total-qrs">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total Pages</div>
+                            <div class="stat-value" id="stat-total-pages">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Most Used Product</div>
+                            <div class="stat-value" id="stat-most-used">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Product</h2>
+                <button class="close-modal" onclick="closeProductModal()">&times;</button>
+            </div>
+            
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="">Select a category</option>
+                        <option value="crystals">Crystals</option>
+                        <option value="keychains">Keychains</option>
+                        <option value="lightBases">Light Bases</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="code">Product Code (2 letters)</label>
+                        <input type="text" id="code" pattern="[A-Za-z]{2}" maxlength="2" required placeholder="e.g., RE">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Product Name</label>
+                        <input type="text" id="name" required placeholder="e.g., Rectangle">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Available Sizes</label>
+                    <div class="size-checkboxes">
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-X" value="X">
+                            <label for="size-X">X (Extra Small)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-S" value="S">
+                            <label for="size-S">S (Small)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-M" value="M">
+                            <label for="size-M">M (Medium)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-L" value="L">
+                            <label for="size-L">L (Large)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-E" value="E">
+                            <label for="size-E">E (Extra Large)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="size-O" value="O">
+                            <label for="size-O">O (One Size)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="secondary" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="category-modal-title">Add Category</h2>
+                <button class="close-modal" onclick="closeCategoryModal()">&times;</button>
+            </div>
+            
+            <form id="category-form" onsubmit="saveCategory(event)">
+                <div class="form-group">
+                    <label for="category-name">Category Name</label>
+                    <input type="text" id="category-name" placeholder="e.g., Crystals, Keychains" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="category-key">Category Key (internal)</label>
+                    <input type="text" id="category-key" placeholder="e.g., crystals, keychains" pattern="[a-zA-Z]+" required>
+                    <small>Only letters, no spaces or special characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Available Sizes for this Category</label>
+                    <div class="sizes-container">
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-X" value="X">
+                            <label for="cat-size-X">X (Extra Small)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-S" value="S">
+                            <label for="cat-size-S">S (Small)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-M" value="M">
+                            <label for="cat-size-M">M (Medium)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-L" value="L">
+                            <label for="cat-size-L">L (Large)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-E" value="E">
+                            <label for="cat-size-E">E (Extra Large)</label>
+                        </div>
+                        <div class="size-checkbox">
+                            <input type="checkbox" id="cat-size-O" value="O">
+                            <label for="cat-size-O">O (One Size)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="secondary" onclick="closeCategoryModal()">Cancel</button>
+                    <button type="submit">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="progress-overlay" id="progress-overlay">
+        <div class="progress-container">
+            <div class="progress-title" id="progress-title">Generating PDF</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">Preparing...</div>
+            <div class="progress-details" id="progress-details">0 of 0 QR codes processed</div>
+        </div>
+    </div>
+
+    <script>
+        let products = {
+            crystals: [],
+            keychains: [],
+            lightBases: []
+        };
+
+        let editingProduct = null;
+        let qrTracking = {};
+        let generatedQRs = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let printHistory = [];
+        let pdfConfig = {};
+        const QR_PER_PAGE = 63;
+        
+        // A4 dimensions in mm
+        const A4_WIDTH_MM = 210;
+        const A4_HEIGHT_MM = 297;
+        
+        // Default configuration
+        // Default moose logo as base64 PNG (created from the provided image)
+        const DEFAULT_MOOSE_LOGO = 'data:image/png;base64,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';
+        
+        const DEFAULT_CONFIG = {
+            rows: 9,
+            cols: 7,
+            labelWidth: 25.4,
+            labelHeight: 25.4,
+            marginTop: 'auto',
+            marginBottom: 'auto',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            autoMargins: true,
+            gapHorizontal: 0,
+            gapVertical: 0,
+            qrSize: 70,
+            errorCorrection: 'M',
+            showText: true,
+            pdfQuality: 1.0,
+            logoEnabled: true,
+            logoData: DEFAULT_MOOSE_LOGO,
+            logoSize: 20,
+            logoPadding: 2
+        };
+
+        function initializeDefaultProducts() {
+            const defaultProducts = {
+                crystals: {
+                    name: 'Crystals',
+                    products: [
+                        { code: 'RE', name: 'Rectangle', sizes: ['X', 'S', 'M', 'L', 'E'] },
+                        { code: 'HT', name: 'Heart', sizes: ['X', 'S', 'M', 'L', 'E'] },
+                        { code: 'SQ', name: 'Square', sizes: ['X', 'S', 'M', 'L', 'E'] },
+                        { code: 'IB', name: 'Iceberg', sizes: ['X', 'S', 'M', 'L', 'E'] },
+                        { code: 'DM', name: 'Diamond', sizes: ['X', 'S', 'M', 'L', 'E'] }
+                    ]
+                },
+                keychains: {
+                    name: 'Keychains',
+                    products: [
+                        { code: 'KH', name: 'Heart', sizes: ['O'] },
+                        { code: 'KR', name: 'Round', sizes: ['O'] },
+                        { code: 'KT', name: 'Tile', sizes: ['O'] }
+                    ]
+                },
+                lightBases: {
+                    name: 'Light Bases',
+                    products: [
+                        { code: 'B1', name: 'B7001', sizes: ['O'] },
+                        { code: 'B2', name: 'XR193', sizes: ['O'] },
+                        { code: 'B3', name: '3545B', sizes: ['O'] },
+                        { code: 'B4', name: '2731R', sizes: ['O'] }
+                    ]
+                }
+            };
+
+            localStorage.setItem('qrProducts', JSON.stringify(defaultProducts));
+            return defaultProducts;
+        }
+
+        function loadProducts() {
+            const stored = localStorage.getItem('qrProducts');
+            if (stored) {
+                products = JSON.parse(stored);
+                
+                // Check if we need to migrate from old format to new format
+                const keys = Object.keys(products);
+                if (keys.length > 0 && Array.isArray(products[keys[0]])) {
+                    // Old format - migrate to new format
+                    const migratedProducts = {};
+                    Object.keys(products).forEach(categoryKey => {
+                        migratedProducts[categoryKey] = {
+                            name: categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1).replace(/([A-Z])/g, ' $1'),
+                            products: products[categoryKey]
+                        };
+                    });
+                    products = migratedProducts;
+                    localStorage.setItem('qrProducts', JSON.stringify(products));
+                }
+            } else {
+                products = initializeDefaultProducts();
+            }
+            renderProductList();
+        }
+
+        function saveProducts() {
+            localStorage.setItem('qrProducts', JSON.stringify(products));
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            
+            if (tab === 'manage') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('manage-tab').classList.add('active');
+            } else if (tab === 'generate') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('generate-tab').classList.add('active');
+                initializeYearMonth();
+            } else if (tab === 'config') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('config-tab').classList.add('active');
+                loadConfigurationUI();
+                updateConfigPreview();
+            } else if (tab === 'history') {
+                document.querySelector('.tab:nth-child(4)').classList.add('active');
+                document.getElementById('history-tab').classList.add('active');
+                renderPrintHistory();
+            }
+        }
+
+        function renderProductList() {
+            const container = document.getElementById('product-list');
+            container.innerHTML = '';
+
+            Object.keys(products).forEach(categoryKey => {
+                const category = products[categoryKey];
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'product-category';
+                
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.style.display = 'flex';
+                categoryHeader.style.justifyContent = 'space-between';
+                categoryHeader.style.alignItems = 'center';
+                categoryHeader.style.marginBottom = '15px';
+                
+                const title = document.createElement('h3');
+                title.textContent = category.name;
+                title.style.margin = '0';
+                
+                const categoryActions = document.createElement('div');
+                categoryActions.className = 'category-actions';
+                categoryActions.innerHTML = `
+                    <button onclick="editCategory('${categoryKey}')" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;">Edit Category</button>
+                    <button class="danger" onclick="deleteCategory('${categoryKey}')" style="padding: 4px 8px; font-size: 12px;">Delete Category</button>
+                `;
+                
+                categoryHeader.appendChild(title);
+                categoryHeader.appendChild(categoryActions);
+                categoryDiv.appendChild(categoryHeader);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'product-items';
+
+                if (!category.products || category.products.length === 0) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'empty-category';
+                    emptyMsg.style.fontStyle = 'italic';
+                    emptyMsg.style.color = '#666';
+                    emptyMsg.style.padding = '20px';
+                    emptyMsg.style.textAlign = 'center';
+                    emptyMsg.textContent = 'No products in this category yet';
+                    itemsDiv.appendChild(emptyMsg);
+                } else {
+                    category.products.forEach((product, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'product-item';
+                        
+                        const info = document.createElement('div');
+                        info.className = 'product-info';
+                        info.innerHTML = `
+                            <span class="product-code">${product.code}</span>
+                            <span>${product.name}</span>
+                            <div class="product-sizes">Sizes: ${product.sizes.join(', ')}</div>
+                        `;
+
+                        const actions = document.createElement('div');
+                        actions.className = 'product-actions';
+                        actions.innerHTML = `
+                            <button onclick="editProduct('${categoryKey}', ${index})">Edit</button>
+                            <button class="danger" onclick="deleteProduct('${categoryKey}', ${index})">Delete</button>
+                        `;
+
+                        item.appendChild(info);
+                        item.appendChild(actions);
+                        itemsDiv.appendChild(item);
+                    });
+                }
+
+                categoryDiv.appendChild(itemsDiv);
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        function openAddProductModal() {
+            editingProduct = null;
+            document.getElementById('modal-title').textContent = 'Add Product';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        function editProduct(categoryKey, index) {
+            editingProduct = { category: categoryKey, index };
+            const product = products[categoryKey].products[index];
+            
+            document.getElementById('modal-title').textContent = 'Edit Product';
+            document.getElementById('category').value = categoryKey;
+            document.getElementById('code').value = product.code;
+            document.getElementById('name').value = product.name;
+            
+            document.querySelectorAll('.size-checkbox input').forEach(cb => {
+                cb.checked = product.sizes.includes(cb.value);
+            });
+            
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.remove('active');
+            document.getElementById('product-form').reset();
+            editingProduct = null;
+        }
+
+        function saveProduct(event) {
+            event.preventDefault();
+            
+            const category = document.getElementById('category').value;
+            const code = document.getElementById('code').value.toUpperCase();
+            const name = document.getElementById('name').value;
+            
+            const sizes = [];
+            document.querySelectorAll('.size-checkbox input:checked').forEach(cb => {
+                sizes.push(cb.value);
+            });
+            
+            if (sizes.length === 0) {
+                alert('Please select at least one size');
+                return;
+            }
+            
+            const product = { code, name, sizes };
+            
+            if (editingProduct) {
+                if (editingProduct.category !== category) {
+                    products[editingProduct.category].products.splice(editingProduct.index, 1);
+                    if (!products[category].products) {
+                        products[category].products = [];
+                    }
+                    products[category].products.push(product);
+                } else {
+                    products[category].products[editingProduct.index] = product;
+                }
+            } else {
+                if (!products[category].products) {
+                    products[category].products = [];
+                }
+                const exists = products[category].products.some(p => p.code === code);
+                if (exists) {
+                    alert('A product with this code already exists in this category');
+                    return;
+                }
+                products[category].products.push(product);
+            }
+            
+            saveProducts();
+            renderProductList();
+            closeProductModal();
+        }
+
+        function deleteProduct(categoryKey, index) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                products[categoryKey].products.splice(index, 1);
+                saveProducts();
+                renderProductList();
+                updateCategoryDropdown();
+            }
+        }
+
+        // Category Management Functions
+        let editingCategory = null;
+
+        function openAddCategoryModal() {
+            editingCategory = null;
+            document.getElementById('category-modal-title').textContent = 'Add Category';
+            document.getElementById('category-form').reset();
+            document.getElementById('category-modal').classList.add('active');
+        }
+
+        function editCategory(categoryKey) {
+            editingCategory = categoryKey;
+            document.getElementById('category-modal-title').textContent = 'Edit Category';
+            
+            // Fill form with current category data
+            const category = products[categoryKey];
+            document.getElementById('category-name').value = category.name;
+            document.getElementById('category-key').value = categoryKey;
+            
+            // Get all available sizes for this category
+            const allSizes = new Set();
+            if (category.products) {
+                category.products.forEach(product => {
+                    product.sizes.forEach(size => allSizes.add(size));
+                });
+            }
+            
+            // Check the appropriate size checkboxes
+            document.querySelectorAll('#category-form .size-checkbox input').forEach(cb => {
+                cb.checked = allSizes.has(cb.value);
+            });
+            
+            document.getElementById('category-modal').classList.add('active');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.remove('active');
+            document.getElementById('category-form').reset();
+            editingCategory = null;
+        }
+
+        function saveCategory(event) {
+            event.preventDefault();
+            
+            const categoryName = document.getElementById('category-name').value.trim();
+            const categoryKey = document.getElementById('category-key').value.toLowerCase().trim();
+            
+            // Validate category key
+            if (!/^[a-z]+$/.test(categoryKey)) {
+                alert('Category key must contain only lowercase letters');
+                return;
+            }
+            
+            // Check if category key already exists (unless we're editing the same category)
+            if (!editingCategory && products.hasOwnProperty(categoryKey)) {
+                alert('A category with this key already exists');
+                return;
+            }
+            
+            if (editingCategory && editingCategory !== categoryKey && products.hasOwnProperty(categoryKey)) {
+                alert('A category with this key already exists');
+                return;
+            }
+            
+            // Get selected sizes
+            const selectedSizes = [];
+            document.querySelectorAll('#category-form .size-checkbox input:checked').forEach(cb => {
+                selectedSizes.push(cb.value);
+            });
+            
+            if (selectedSizes.length === 0) {
+                alert('Please select at least one size for this category');
+                return;
+            }
+            
+            if (editingCategory) {
+                // Editing existing category
+                if (editingCategory !== categoryKey) {
+                    // Category key changed, need to rename
+                    products[categoryKey] = products[editingCategory];
+                    delete products[editingCategory];
+                }
+                
+                // Update category name
+                products[categoryKey].name = categoryName;
+                
+                // Update sizes for all products in category if needed
+                if (products[categoryKey].products) {
+                    products[categoryKey].products.forEach(product => {
+                        product.sizes = product.sizes.filter(size => selectedSizes.includes(size));
+                        if (product.sizes.length === 0) {
+                            product.sizes = [selectedSizes[0]]; // Assign first available size
+                        }
+                    });
+                }
+            } else {
+                // Adding new category
+                products[categoryKey] = {
+                    name: categoryName,
+                    products: []
+                };
+            }
+            
+            saveProducts();
+            renderProductList();
+            updateCategoryDropdown();
+            closeCategoryModal();
+            alert('Category saved successfully!');
+        }
+
+        function deleteCategory(categoryKey) {
+            const categoryName = products[categoryKey].name;
+            if (confirm(`Are you sure you want to delete the "${categoryName}" category? This will also delete all products in this category.`)) {
+                delete products[categoryKey];
+                saveProducts();
+                renderProductList();
+                updateCategoryDropdown();
+            }
+        }
+
+        function updateCategoryDropdown() {
+            const select = document.getElementById('category');
+            const currentValue = select.value;
+            
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">Select a category</option>';
+            
+            // Add options for each category
+            Object.keys(products).forEach(categoryKey => {
+                const option = document.createElement('option');
+                option.value = categoryKey;
+                option.textContent = products[categoryKey].name;
+                select.appendChild(option);
+            });
+            
+            // Restore previous selection if it still exists
+            if (currentValue && products.hasOwnProperty(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        function loadQRTracking() {
+            const stored = localStorage.getItem('qrTracking');
+            if (stored) {
+                qrTracking = JSON.parse(stored);
+            }
+        }
+
+        function saveQRTracking() {
+            localStorage.setItem('qrTracking', JSON.stringify(qrTracking));
+        }
+
+        function loadPrintHistory() {
+            const stored = localStorage.getItem('printHistory');
+            if (stored) {
+                printHistory = JSON.parse(stored);
+            }
+        }
+
+        function savePrintHistory() {
+            localStorage.setItem('printHistory', JSON.stringify(printHistory));
+        }
+
+        function initializeYearMonth() {
+            const now = new Date();
+            const year = String(now.getFullYear()).slice(-2);
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const yearMonthInput = document.getElementById('year-month');
+            if (!yearMonthInput.value) {
+                yearMonthInput.value = year + month;
+            }
+        }
+
+        function updateGenProductDropdown() {
+            const category = document.getElementById('gen-category').value;
+            const productSelect = document.getElementById('gen-product');
+            const sizeSelect = document.getElementById('gen-size');
+            
+            productSelect.innerHTML = '<option value="">Select a product</option>';
+            sizeSelect.innerHTML = '<option value="">Select a size</option>';
+            sizeSelect.disabled = true;
+            
+            if (category && products[category] && products[category].products) {
+                productSelect.disabled = false;
+                products[category].products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.code;
+                    option.textContent = `${product.code} - ${product.name}`;
+                    productSelect.appendChild(option);
+                });
+            } else {
+                productSelect.disabled = true;
+            }
+            
+            document.getElementById('generate-batch-btn').disabled = true;
+            document.getElementById('id-info').style.display = 'none';
+            document.getElementById('suggestion').style.display = 'none';
+        }
+
+        function updateGenSizeDropdown() {
+            const category = document.getElementById('gen-category').value;
+            const productCode = document.getElementById('gen-product').value;
+            const sizeSelect = document.getElementById('gen-size');
+            
+            sizeSelect.innerHTML = '<option value="">Select a size</option>';
+            
+            if (category && productCode) {
+                const product = products[category].find(p => p.code === productCode);
+                if (product) {
+                    sizeSelect.disabled = false;
+                    product.sizes.forEach(size => {
+                        const option = document.createElement('option');
+                        option.value = size;
+                        option.textContent = size === 'O' ? 'One Size' : `Size ${size}`;
+                        sizeSelect.appendChild(option);
+                    });
+                }
+            } else {
+                sizeSelect.disabled = true;
+            }
+            
+            document.getElementById('generate-batch-btn').disabled = true;
+        }
+
+        function updateStartNumberSuggestion() {
+            const productCode = document.getElementById('gen-product').value;
+            const size = document.getElementById('gen-size').value;
+            
+            if (!productCode || !size) {
+                document.getElementById('generate-batch-btn').disabled = true;
+                return;
+            }
+            
+            const key = `${productCode}${size}`;
+            const trackingData = qrTracking[key] || { lastId: 0, usedIds: [] };
+            
+            const suggestionDiv = document.getElementById('suggestion');
+            const startNumberInput = document.getElementById('start-number');
+            
+            if (trackingData.lastId > 0) {
+                const suggestedStart = trackingData.lastId + 1;
+                suggestionDiv.innerHTML = `Suggested start: ${String(suggestedStart).padStart(4, '0')} (Last used: ${String(trackingData.lastId).padStart(4, '0')})`;
+                suggestionDiv.style.display = 'block';
+                
+                if (!startNumberInput.value) {
+                    startNumberInput.value = suggestedStart;
+                }
+            } else {
+                suggestionDiv.innerHTML = 'First batch for this product-size combination';
+                suggestionDiv.style.display = 'block';
+                if (!startNumberInput.value) {
+                    startNumberInput.value = 1;
+                }
+            }
+            
+            document.getElementById('id-info').style.display = 'grid';
+            document.getElementById('last-used-id').textContent = trackingData.lastId > 0 ? String(trackingData.lastId).padStart(4, '0') : '-';
+            document.getElementById('total-generated').textContent = trackingData.usedIds.length;
+            
+            document.getElementById('generate-batch-btn').disabled = false;
+            checkForGaps();
+        }
+
+        function checkForGaps() {
+            const productCode = document.getElementById('gen-product').value;
+            const size = document.getElementById('gen-size').value;
+            const startNumber = parseInt(document.getElementById('start-number').value) || 1;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            
+            const key = `${productCode}${size}`;
+            const trackingData = qrTracking[key] || { lastId: 0, usedIds: [] };
+            
+            const warningDiv = document.getElementById('gap-warning');
+            const endNumber = startNumber + quantity - 1;
+            
+            document.getElementById('current-range').textContent = `${String(startNumber).padStart(4, '0')}-${String(endNumber).padStart(4, '0')}`;
+            
+            const gaps = [];
+            if (trackingData.lastId > 0 && startNumber > trackingData.lastId + 1) {
+                gaps.push(`Gap detected: IDs ${String(trackingData.lastId + 1).padStart(4, '0')} to ${String(startNumber - 1).padStart(4, '0')} will be skipped`);
+            }
+            
+            const overlaps = [];
+            for (let i = startNumber; i <= endNumber; i++) {
+                if (trackingData.usedIds.includes(i)) {
+                    overlaps.push(String(i).padStart(4, '0'));
+                }
+            }
+            
+            if (overlaps.length > 0) {
+                gaps.push(`Warning: The following IDs have already been used: ${overlaps.join(', ')}`);
+            }
+            
+            if (endNumber > 9999) {
+                gaps.push('Error: ID range exceeds maximum of 9999');
+                document.getElementById('generate-batch-btn').disabled = true;
+            }
+            
+            if (gaps.length > 0) {
+                warningDiv.innerHTML = gaps.join('<br>');
+                warningDiv.classList.add('active');
+            } else {
+                warningDiv.classList.remove('active');
+            }
+        }
+
+        document.getElementById('start-number').addEventListener('input', checkForGaps);
+        document.getElementById('quantity').addEventListener('input', checkForGaps);
+
+        function generateBatchQR() {
+            const category = document.getElementById('gen-category').value;
+            const productCode = document.getElementById('gen-product').value;
+            const size = document.getElementById('gen-size').value;
+            const startNumber = parseInt(document.getElementById('start-number').value) || 1;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const yearMonth = document.getElementById('year-month').value;
+            
+            if (!productCode || !size || !yearMonth || yearMonth.length !== 4) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+            
+            
+            const key = `${productCode}${size}`;
+            if (!qrTracking[key]) {
+                qrTracking[key] = { lastId: 0, usedIds: [] };
+            }
+            
+            generatedQRs = [];
+            
+            for (let i = 0; i < quantity; i++) {
+                const currentId = startNumber + i;
+                const idStr = String(currentId).padStart(4, '0');
+                const qrValue = `RMT-${productCode}${size}-${yearMonth}-${idStr}`;
+                
+                generatedQRs.push({
+                    value: qrValue,
+                    id: currentId
+                });
+                
+                if (!qrTracking[key].usedIds.includes(currentId)) {
+                    qrTracking[key].usedIds.push(currentId);
+                }
+                qrTracking[key].lastId = Math.max(qrTracking[key].lastId, currentId);
+            }
+            
+            // Use configuration for pagination
+            const qrPerPage = pdfConfig.rows * pdfConfig.cols;
+            totalPages = Math.ceil(generatedQRs.length / qrPerPage);
+            currentPage = 1;
+            
+            displayCurrentPage();
+            
+            // Reset export button state
+            const exportBtn = document.getElementById('export-pdf-btn');
+            exportBtn.disabled = false;
+            exportBtn.textContent = 'Export PDF';
+            
+            saveQRTracking();
+            updateStartNumberSuggestion();
+        }
+
+        function displayCurrentPage() {
+            const gridDiv = document.getElementById('qr-grid');
+            gridDiv.innerHTML = '';
+            
+            // Apply configuration settings to grid
+            const config = pdfConfig;
+            console.log('displayCurrentPage config:', {
+                logoEnabled: config.logoEnabled,
+                hasLogoData: !!config.logoData,
+                logoSize: config.logoSize
+            });
+            const qrPerPage = config.rows * config.cols;
+            
+            // Set grid columns based on configuration
+            gridDiv.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
+            
+            // Calculate appropriate item size based on available space
+            const containerWidth = 900; // Approximate container width
+            const availableWidth = containerWidth - (40 + (config.cols - 1) * 10); // Subtract padding and gaps
+            const itemWidth = Math.min(availableWidth / config.cols, 120); // Max 120px per item
+            
+            const startIndex = (currentPage - 1) * qrPerPage;
+            const endIndex = Math.min(startIndex + qrPerPage, generatedQRs.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const qrData = generatedQRs[i];
+                
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                qrItem.id = `qr-${i}`;
+                qrItem.style.width = itemWidth + 'px';
+                qrItem.style.height = itemWidth + 'px';
+                
+                const qrDiv = document.createElement('div');
+                qrDiv.id = `qrcode-${i}`;
+                
+                // Calculate QR code size based on configuration
+                const qrSize = Math.floor(itemWidth * config.qrSize / 100);
+                
+                // Only add label if showText is enabled
+                if (config.showText) {
+                    const label = document.createElement('div');
+                    label.className = 'qr-label';
+                    label.textContent = qrData.value;
+                    qrItem.appendChild(qrDiv);
+                    qrItem.appendChild(label);
+                    
+                    // Dynamic text sizing
+                    adjustTextSize(label, qrData.value);
+                } else {
+                    qrItem.appendChild(qrDiv);
+                    // Center the QR code when no text
+                    qrItem.style.justifyContent = 'center';
+                }
+                
+                gridDiv.appendChild(qrItem);
+                
+                // Generate QR code with configured error correction
+                const errorLevels = { 
+                    'L': QRCode.CorrectLevel.L, 
+                    'M': QRCode.CorrectLevel.M, 
+                    'Q': QRCode.CorrectLevel.Q, 
+                    'H': QRCode.CorrectLevel.H 
+                };
+                
+                // Check if logo should be shown
+                const logoConfig = {
+                    ...config,
+                    logoEnabled: true,
+                    logoData: config.logoData || DEFAULT_MOOSE_LOGO
+                };
+                
+                if (logoConfig.logoEnabled && logoConfig.logoData) {
+                    // Create QR code with logo using custom canvas approach
+                    createQRWithLogo(qrDiv, qrData.value, qrSize, logoConfig);
+                } else {
+                    // Standard QR code without logo
+                    const qrCode = new QRCode(qrDiv, {
+                        text: qrData.value,
+                        width: qrSize,
+                        height: qrSize,
+                        correctLevel: errorLevels[config.errorCorrection] || QRCode.CorrectLevel.M
+                    });
+                }
+            }
+            
+            document.getElementById('qr-container').style.display = 'block';
+            document.getElementById('export-pdf-btn').disabled = false;
+            
+            // Update configuration info display
+            document.getElementById('layout-info').textContent = `${config.cols}×${config.rows} grid`;
+            document.getElementById('qr-size-info').textContent = `${config.qrSize}%`;
+            document.getElementById('text-info').textContent = config.showText ? 'Shown' : 'Hidden';
+            const errorLevelNames = { 'L': 'Low', 'M': 'Medium', 'Q': 'Quartile', 'H': 'High' };
+            document.getElementById('error-info').textContent = errorLevelNames[config.errorCorrection] || 'Medium';
+            
+            // Update pagination based on configured items per page
+            totalPages = Math.ceil(generatedQRs.length / qrPerPage);
+            
+            if (totalPages > 1) {
+                document.getElementById('pagination-container').style.display = 'block';
+                document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages} (${generatedQRs.length} total QR codes)`;
+                document.getElementById('prev-btn').disabled = currentPage === 1;
+                document.getElementById('next-btn').disabled = currentPage === totalPages;
+            } else {
+                document.getElementById('pagination-container').style.display = 'none';
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayCurrentPage();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayCurrentPage();
+            }
+        }
+
+        function adjustTextSize(element, text) {
+            // Start with a base font size
+            let fontSize = 10;
+            element.style.fontSize = fontSize + 'px';
+            
+            // Get the available space (accounting for padding and margins)
+            const maxWidth = 90; // 96px - 6px for padding/margins
+            const maxHeight = 30; // Approximate height available for text
+            
+            // Measure text width and height
+            const measureDiv = document.createElement('div');
+            measureDiv.style.position = 'absolute';
+            measureDiv.style.visibility = 'hidden';
+            measureDiv.style.whiteSpace = 'nowrap';
+            measureDiv.style.fontSize = fontSize + 'px';
+            measureDiv.style.fontWeight = '500';
+            measureDiv.textContent = text;
+            document.body.appendChild(measureDiv);
+            
+            // Adjust font size down if text is too wide
+            while (measureDiv.offsetWidth > maxWidth && fontSize > 6) {
+                fontSize -= 0.5;
+                measureDiv.style.fontSize = fontSize + 'px';
+            }
+            
+            // For very long text, allow wrapping and check height
+            if (measureDiv.offsetWidth > maxWidth) {
+                measureDiv.style.whiteSpace = 'normal';
+                measureDiv.style.width = maxWidth + 'px';
+                measureDiv.style.lineHeight = '1';
+                
+                while (measureDiv.offsetHeight > maxHeight && fontSize > 5) {
+                    fontSize -= 0.5;
+                    measureDiv.style.fontSize = fontSize + 'px';
+                }
+            }
+            
+            document.body.removeChild(measureDiv);
+            
+            // Apply the calculated font size
+            element.style.fontSize = Math.max(fontSize, 5) + 'px';
+            
+            // If text is still too long, allow wrapping
+            if (text.length > 20) {
+                element.style.whiteSpace = 'normal';
+                element.style.wordBreak = 'break-all';
+            } else {
+                element.style.whiteSpace = 'nowrap';
+            }
+        }
+
+        async function exportToPDF() {
+            if (generatedQRs.length === 0) {
+                alert('No QR codes to export. Please generate QR codes first.');
+                return;
+            }
+
+            // Show progress overlay
+            showProgress('Initializing PDF Generation', 'Preparing settings...', 0, generatedQRs.length);
+
+            // Disable button during generation
+            const exportBtn = document.getElementById('export-pdf-btn');
+            exportBtn.disabled = true;
+            exportBtn.textContent = 'Generating PDF...';
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            // Use configuration settings
+            const config = pdfConfig;
+            const totalLabelsWidth = config.cols * config.labelWidth + (config.cols - 1) * config.gapHorizontal;
+            const totalLabelsHeight = config.rows * config.labelHeight + (config.rows - 1) * config.gapVertical;
+            
+            // Calculate margins
+            let marginX, marginY;
+            if (config.autoMargins) {
+                marginX = (A4_WIDTH_MM - totalLabelsWidth) / 2;
+                marginY = (A4_HEIGHT_MM - totalLabelsHeight) / 2;
+            } else {
+                marginX = parseFloat(config.marginLeft) || 0;
+                marginY = parseFloat(config.marginTop) || 0;
+            }
+            
+            const qrCodesPerPage = config.rows * config.cols;
+            const totalPdfPages = Math.ceil(generatedQRs.length / qrCodesPerPage);
+            
+            // Get product info for filename
+            const productCode = document.getElementById('gen-product').value;
+            const size = document.getElementById('gen-size').value;
+            const yearMonth = document.getElementById('year-month').value;
+            const startId = generatedQRs[0].id;
+            const endId = generatedQRs[generatedQRs.length - 1].id;
+            
+            try {
+                // Pre-generate all QR codes with progress tracking
+                updateProgress('Generating QR Codes', 'Processing QR codes in batches...', 0, generatedQRs.length);
+                
+                console.log('Starting QR generation for', generatedQRs.length, 'codes');
+                const qrImages = await generateAllQRCodesWithProgress(generatedQRs, config);
+                console.log('QR generation completed, got', qrImages.length, 'images');
+                
+                // Create PDF pages with progress
+                updateProgress('Creating PDF Pages', `Building ${totalPdfPages} page(s)...`, 0, totalPdfPages);
+                
+                for (let pageNum = 0; pageNum < totalPdfPages; pageNum++) {
+                    if (pageNum > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    const startIndex = pageNum * qrCodesPerPage;
+                    const endIndex = Math.min(startIndex + qrCodesPerPage, generatedQRs.length);
+                    
+                    let qrIndex = 0;
+                    
+                    for (let row = 0; row < config.rows && startIndex + qrIndex < endIndex; row++) {
+                        for (let col = 0; col < config.cols && startIndex + qrIndex < endIndex; col++) {
+                            const qrData = generatedQRs[startIndex + qrIndex];
+                            const qrImage = qrImages[startIndex + qrIndex];
+                            
+                            const x = marginX + (col * (config.labelWidth + config.gapHorizontal));
+                            const y = marginY + (row * (config.labelHeight + config.gapVertical));
+                            
+                            // Add pre-generated QR code to PDF (fast)
+                            if (qrImage) {
+                                addQRToPDF(pdf, qrImage, qrData.value, x, y, config);
+                            } else {
+                                console.warn('Missing QR image for index', startIndex + qrIndex);
+                            }
+                            
+                            qrIndex++;
+                        }
+                    }
+                    
+                    // Update progress
+                    updateProgress('Creating PDF Pages', `Page ${pageNum + 1} of ${totalPdfPages} completed`, pageNum + 1, totalPdfPages);
+                    
+                    // Small delay for UI update
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                
+                // Generate filename
+                const filename = `QR-${productCode}${size}-${yearMonth}-${String(startId).padStart(4, '0')}-${String(endId).padStart(4, '0')}.pdf`;
+                
+                // Save to print history
+                updateProgress('Finalizing', 'Saving to history...', 100, 100);
+                const printRecord = {
+                    timestamp: new Date().toISOString(),
+                    filename: filename,
+                    productCode: productCode,
+                    size: size,
+                    yearMonth: yearMonth,
+                    startId: startId,
+                    endId: endId,
+                    quantity: generatedQRs.length,
+                    pages: totalPdfPages
+                };
+                
+                printHistory.push(printRecord);
+                savePrintHistory();
+                
+                // Download PDF
+                updateProgress('Downloading', 'Preparing file download...', 100, 100);
+                await new Promise(resolve => setTimeout(resolve, 300)); // Brief delay for user to see completion
+                
+                console.log('Saving PDF:', filename);
+                pdf.save(filename);
+                
+            } catch (error) {
+                console.error('Detailed error generating PDF:', error);
+                console.error('Error stack:', error.stack);
+                alert(`Error generating PDF: ${error.message}. Check console for details.`);
+            } finally {
+                // Hide progress and re-enable button
+                hideProgress();
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Export PDF';
+            }
+        }
+
+        async function generateAllQRCodesWithProgress(qrDataArray, config) {
+            const batchSize = 10; // Process QR codes in batches to avoid overwhelming the browser
+            const qrImages = [];
+            
+            for (let i = 0; i < qrDataArray.length; i += batchSize) {
+                const batch = qrDataArray.slice(i, i + batchSize);
+                const batchPromises = batch.map(qrData => generateSingleQR(qrData.value, config));
+                const batchImages = await Promise.all(batchPromises);
+                qrImages.push(...batchImages);
+                
+                // Update progress
+                const completed = Math.min(i + batchSize, qrDataArray.length);
+                updateProgress('Generating QR Codes', `${completed} of ${qrDataArray.length} QR codes generated`, completed, qrDataArray.length);
+                
+                // Small delay to prevent browser freezing and allow UI update
+                if (i + batchSize < qrDataArray.length) {
+                    await new Promise(resolve => setTimeout(resolve, 20));
+                }
+            }
+            
+            return qrImages;
+        }
+
+        function showProgress(title, text, current, total) {
+            try {
+                const overlay = document.getElementById('progress-overlay');
+                const titleEl = document.getElementById('progress-title');
+                const textEl = document.getElementById('progress-text');
+                const detailsEl = document.getElementById('progress-details');
+                const fillEl = document.getElementById('progress-fill');
+                
+                if (!overlay || !titleEl || !textEl || !detailsEl || !fillEl) {
+                    console.error('Progress elements not found');
+                    return;
+                }
+                
+                titleEl.textContent = title || 'Processing...';
+                textEl.textContent = text || '';
+                detailsEl.textContent = `${current || 0} of ${total || 0} processed`;
+                
+                const percentage = total > 0 ? Math.min((current / total) * 100, 100) : 0;
+                fillEl.style.width = percentage + '%';
+                
+                overlay.classList.add('active');
+            } catch (error) {
+                console.error('Error in showProgress:', error);
+            }
+        }
+
+        function updateProgress(title, text, current, total) {
+            try {
+                const titleEl = document.getElementById('progress-title');
+                const textEl = document.getElementById('progress-text');
+                const detailsEl = document.getElementById('progress-details');
+                const fillEl = document.getElementById('progress-fill');
+                
+                if (!titleEl || !textEl || !detailsEl || !fillEl) {
+                    console.error('Progress elements not found for update');
+                    return;
+                }
+                
+                titleEl.textContent = title || 'Processing...';
+                textEl.textContent = text || '';
+                detailsEl.textContent = `${current || 0} of ${total || 0} processed`;
+                
+                const percentage = total > 0 ? Math.min((current / total) * 100, 100) : 0;
+                fillEl.style.width = percentage + '%';
+            } catch (error) {
+                console.error('Error in updateProgress:', error);
+            }
+        }
+
+        function hideProgress() {
+            try {
+                const overlay = document.getElementById('progress-overlay');
+                const fillEl = document.getElementById('progress-fill');
+                
+                if (overlay) {
+                    overlay.classList.remove('active');
+                }
+                
+                if (fillEl) {
+                    fillEl.style.width = '0%';
+                }
+            } catch (error) {
+                console.error('Error in hideProgress:', error);
+            }
+        }
+
+        function generateSingleQR(qrValue, config) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Create a temporary div to generate QR code
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.left = '-9999px';
+                    tempDiv.style.width = '256px';
+                    tempDiv.style.height = '256px';
+                    document.body.appendChild(tempDiv);
+                    
+                    // Generate QR code with configurable error correction
+                    const errorLevels = { 'L': QRCode.CorrectLevel.L, 'M': QRCode.CorrectLevel.M, 'Q': QRCode.CorrectLevel.Q, 'H': QRCode.CorrectLevel.H };
+                    
+                    const qr = new QRCode(tempDiv, {
+                        text: qrValue || '',
+                        width: Math.round(256 * (config.pdfQuality || 1.0)),
+                        height: Math.round(256 * (config.pdfQuality || 1.0)),
+                        correctLevel: errorLevels[config.errorCorrection] || QRCode.CorrectLevel.M
+                    });
+                    
+                    // Wait for QR code generation
+                    setTimeout(async () => {
+                        try {
+                            const canvas = tempDiv.querySelector('canvas');
+                            let imgData = null;
+                            if (canvas) {
+                                // Add logo overlay if enabled
+                                if (config.logoEnabled && config.logoData) {
+                                    await addLogoToCanvas(canvas, config);
+                                }
+                                imgData = canvas.toDataURL('image/png');
+                            }
+                            
+                            // Clean up immediately
+                            if (document.body.contains(tempDiv)) {
+                                document.body.removeChild(tempDiv);
+                            }
+                            resolve(imgData);
+                        } catch (cleanupError) {
+                            console.error('Error in QR cleanup:', cleanupError);
+                            resolve(null); // Return null instead of failing completely
+                        }
+                    }, 100); // Slightly increased timeout for reliability
+                } catch (error) {
+                    console.error('Error generating single QR:', error);
+                    resolve(null); // Return null instead of rejecting
+                }
+            });
+        }
+
+        function createQRWithLogo(container, text, size, config) {
+            // Create a temporary container for generating QR code
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+            
+            // Generate QR code in temporary container
+            const errorLevels = { 
+                'L': QRCode.CorrectLevel.L, 
+                'M': QRCode.CorrectLevel.M, 
+                'Q': QRCode.CorrectLevel.Q, 
+                'H': QRCode.CorrectLevel.H 
+            };
+            
+            const qrCode = new QRCode(tempDiv, {
+                text: text,
+                width: size,
+                height: size,
+                correctLevel: errorLevels[config.errorCorrection] || QRCode.CorrectLevel.M
+            });
+            
+            // Wait for QR code to be generated, then add logo
+            setTimeout(() => {
+                const tempCanvas = tempDiv.querySelector('canvas');
+                if (tempCanvas) {
+                    // Create our own canvas
+                    const finalCanvas = document.createElement('canvas');
+                    finalCanvas.width = size;
+                    finalCanvas.height = size;
+                    const ctx = finalCanvas.getContext('2d');
+                    
+                    // Draw the QR code
+                    ctx.drawImage(tempCanvas, 0, 0);
+                    
+                    // Add logo
+                    if (config.logoData) {
+                        const logoImg = new Image();
+                        logoImg.onload = function() {
+                            const logoSize = (size * config.logoSize / 100);
+                            const logoPadding = config.logoPadding || 0;
+                            const x = (size - logoSize) / 2;
+                            const y = (size - logoSize) / 2;
+                            
+                            // Add white background with padding
+                            if (logoPadding > 0) {
+                                const bgSize = logoSize + (logoPadding * 2);
+                                const bgX = x - logoPadding;
+                                const bgY = y - logoPadding;
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(bgX, bgY, bgSize, bgSize);
+                            }
+                            
+                            // Draw logo
+                            ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+                            
+                            // Replace content in container
+                            container.innerHTML = '';
+                            container.appendChild(finalCanvas);
+                            
+                            // Clean up temp div
+                            document.body.removeChild(tempDiv);
+                        };
+                        logoImg.src = config.logoData;
+                    } else {
+                        // No logo, just use the QR code
+                        container.innerHTML = '';
+                        container.appendChild(finalCanvas);
+                        document.body.removeChild(tempDiv);
+                    }
+                }
+            }, 200);
+        }
+
+        function addLogoToCanvas(canvas, config) {
+            return new Promise((resolve) => {
+                if (!config.logoData) {
+                    resolve();
+                    return;
+                }
+                
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    const canvasSize = canvas.width;
+                    const logoSize = (canvasSize * config.logoSize / 100);
+                    const logoPadding = config.logoPadding || 0;
+                    
+                    // Calculate center position
+                    const x = (canvasSize - logoSize) / 2;
+                    const y = (canvasSize - logoSize) / 2;
+                    
+                    // Add white background with padding if specified
+                    if (logoPadding > 0) {
+                        const bgSize = logoSize + (logoPadding * 2);
+                        const bgX = x - logoPadding;
+                        const bgY = y - logoPadding;
+                        
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(bgX, bgY, bgSize, bgSize);
+                    }
+                    
+                    // Draw the logo
+                    ctx.drawImage(img, x, y, logoSize, logoSize);
+                    resolve();
+                };
+                
+                img.onerror = function() {
+                    resolve(); // Continue even if logo fails to load
+                };
+                
+                img.src = config.logoData;
+            });
+        }
+        
+        function addQRToPDF(pdf, qrImage, qrValue, x, y, config) {
+            if (!qrImage) return;
+            
+            // QR code dimensions based on configuration
+            const qrSize = config.labelWidth * config.qrSize / 100;
+            const qrX = x + (config.labelWidth - qrSize) / 2;
+            const qrY = y + 2; // 2mm from top
+            
+            // Add QR code to PDF
+            pdf.addImage(qrImage, 'PNG', qrX, qrY, qrSize, qrSize);
+            
+            // Add text below QR code if enabled
+            if (config.showText) {
+                const textY = qrY + qrSize + 2; // 2mm below QR code
+                const textX = x + config.labelWidth / 2;
+                
+                // Calculate appropriate font size for the text
+                let fontSize = 6;
+                pdf.setFontSize(fontSize);
+                pdf.setFont(undefined, 'normal');
+                
+                // Check if text fits in label width
+                while (pdf.getTextWidth(qrValue) > (config.labelWidth - 2) && fontSize > 4) {
+                    fontSize -= 0.5;
+                    pdf.setFontSize(fontSize);
+                }
+                
+                // Center align text
+                pdf.text(qrValue, textX, textY, { align: 'center' });
+            }
+        }
+
+        function loadConfiguration() {
+            const stored = localStorage.getItem('pdfConfig');
+            if (stored) {
+                const storedConfig = JSON.parse(stored);
+                pdfConfig = { ...DEFAULT_CONFIG, ...storedConfig };
+                // Ensure logo data is preserved if not in stored config
+                if (!storedConfig.logoData && DEFAULT_CONFIG.logoData) {
+                    pdfConfig.logoData = DEFAULT_CONFIG.logoData;
+                    pdfConfig.logoEnabled = DEFAULT_CONFIG.logoEnabled;
+                }
+            } else {
+                pdfConfig = { ...DEFAULT_CONFIG };
+            }
+            console.log('Loaded configuration:', {
+                logoEnabled: pdfConfig.logoEnabled,
+                hasLogoData: !!pdfConfig.logoData,
+                logoSize: pdfConfig.logoSize
+            });
+        }
+
+        function saveConfiguration() {
+            // Get values from UI
+            pdfConfig = {
+                rows: parseInt(document.getElementById('config-rows').value),
+                cols: parseInt(document.getElementById('config-cols').value),
+                labelWidth: parseFloat(document.getElementById('config-label-width').value),
+                labelHeight: parseFloat(document.getElementById('config-label-height').value),
+                marginTop: document.getElementById('config-margin-top').value,
+                marginBottom: document.getElementById('config-margin-bottom').value,
+                marginLeft: document.getElementById('config-margin-left').value,
+                marginRight: document.getElementById('config-margin-right').value,
+                autoMargins: document.getElementById('config-auto-margins').checked,
+                gapHorizontal: parseFloat(document.getElementById('config-gap-horizontal').value),
+                gapVertical: parseFloat(document.getElementById('config-gap-vertical').value),
+                qrSize: parseInt(document.getElementById('config-qr-size').value),
+                errorCorrection: document.getElementById('config-error-correction').value,
+                showText: document.getElementById('config-show-text').checked,
+                pdfQuality: parseFloat(document.getElementById('config-pdf-quality').value),
+                logoEnabled: document.getElementById('config-logo-enabled').checked,
+                logoData: pdfConfig.logoData || null,
+                logoSize: parseInt(document.getElementById('config-logo-size').value),
+                logoPadding: parseInt(document.getElementById('config-logo-padding').value)
+            };
+            
+            localStorage.setItem('pdfConfig', JSON.stringify(pdfConfig));
+            updateConfigPreview();
+            alert('Configuration saved successfully!');
+        }
+
+        function resetConfiguration() {
+            if (confirm('Reset all settings to defaults?')) {
+                pdfConfig = { ...DEFAULT_CONFIG };
+                localStorage.setItem('pdfConfig', JSON.stringify(pdfConfig));
+                loadConfigurationUI();
+                updateConfigPreview();
+            }
+        }
+        
+        // Temporary function to clear localStorage for testing
+        function clearAllStorage() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function loadConfigurationUI() {
+            document.getElementById('config-rows').value = pdfConfig.rows;
+            document.getElementById('config-cols').value = pdfConfig.cols;
+            document.getElementById('config-label-width').value = pdfConfig.labelWidth;
+            document.getElementById('config-label-height').value = pdfConfig.labelHeight;
+            document.getElementById('config-auto-margins').checked = pdfConfig.autoMargins;
+            document.getElementById('config-gap-horizontal').value = pdfConfig.gapHorizontal;
+            document.getElementById('config-gap-vertical').value = pdfConfig.gapVertical;
+            document.getElementById('config-qr-size').value = pdfConfig.qrSize;
+            document.getElementById('config-error-correction').value = pdfConfig.errorCorrection;
+            document.getElementById('config-show-text').checked = pdfConfig.showText;
+            document.getElementById('config-pdf-quality').value = pdfConfig.pdfQuality;
+            
+            // Load logo settings
+            document.getElementById('config-logo-enabled').checked = pdfConfig.logoEnabled || false;
+            document.getElementById('config-logo-size').value = pdfConfig.logoSize || 20;
+            document.getElementById('config-logo-padding').value = pdfConfig.logoPadding || 2;
+            
+            // Display logo preview if logo data exists
+            if (pdfConfig.logoData) {
+                document.getElementById('logo-preview-img').src = pdfConfig.logoData;
+                document.getElementById('logo-preview').style.display = 'block';
+            } else {
+                document.getElementById('logo-preview').style.display = 'none';
+            }
+            
+            // Set margin values (either stored values for manual mode or calculated for auto mode)
+            if (!pdfConfig.autoMargins) {
+                document.getElementById('config-margin-top').value = pdfConfig.marginTop !== 'auto' ? pdfConfig.marginTop : '';
+                document.getElementById('config-margin-bottom').value = pdfConfig.marginBottom !== 'auto' ? pdfConfig.marginBottom : '';
+                document.getElementById('config-margin-left').value = pdfConfig.marginLeft !== 'auto' ? pdfConfig.marginLeft : '';
+                document.getElementById('config-margin-right').value = pdfConfig.marginRight !== 'auto' ? pdfConfig.marginRight : '';
+            }
+            
+            // Update margin fields based on auto-margins setting
+            updateMarginFields();
+        }
+
+        function updateConfigPreview() {
+            const labelsPerPage = pdfConfig.rows * pdfConfig.cols;
+            const qrSizeMM = (pdfConfig.labelWidth * pdfConfig.qrSize / 100);
+            const totalWidth = pdfConfig.cols * pdfConfig.labelWidth + (pdfConfig.cols - 1) * pdfConfig.gapHorizontal;
+            const totalHeight = pdfConfig.rows * pdfConfig.labelHeight + (pdfConfig.rows - 1) * pdfConfig.gapVertical;
+            const utilization = ((totalWidth * totalHeight) / (A4_WIDTH_MM * A4_HEIGHT_MM) * 100);
+            
+            document.getElementById('preview-per-page').textContent = labelsPerPage;
+            document.getElementById('preview-label-area').textContent = `${pdfConfig.labelWidth} × ${pdfConfig.labelHeight} mm`;
+            document.getElementById('preview-qr-size').textContent = `${qrSizeMM.toFixed(1)} × ${qrSizeMM.toFixed(1)} mm`;
+            document.getElementById('preview-utilization').textContent = `${utilization.toFixed(1)}%`;
+            
+            // Update auto-calculated margin values
+            updateMarginFields();
+        }
+
+        function updateMarginFields() {
+            const autoMargins = document.getElementById('config-auto-margins').checked;
+            const marginTopEl = document.getElementById('config-margin-top');
+            const marginBottomEl = document.getElementById('config-margin-bottom');
+            const marginLeftEl = document.getElementById('config-margin-left');
+            const marginRightEl = document.getElementById('config-margin-right');
+            
+            if (autoMargins) {
+                // Get current values from input fields (not from pdfConfig which might be outdated)
+                const cols = parseInt(document.getElementById('config-cols').value) || pdfConfig.cols;
+                const rows = parseInt(document.getElementById('config-rows').value) || pdfConfig.rows;
+                const labelWidth = parseFloat(document.getElementById('config-label-width').value) || pdfConfig.labelWidth;
+                const labelHeight = parseFloat(document.getElementById('config-label-height').value) || pdfConfig.labelHeight;
+                const gapHorizontal = parseFloat(document.getElementById('config-gap-horizontal').value) || 0;
+                const gapVertical = parseFloat(document.getElementById('config-gap-vertical').value) || 0;
+                
+                // Calculate total dimensions including gaps
+                const totalWidth = cols * labelWidth + (cols - 1) * gapHorizontal;
+                const totalHeight = rows * labelHeight + (rows - 1) * gapVertical;
+                const marginX = (A4_WIDTH_MM - totalWidth) / 2;
+                const marginY = (A4_HEIGHT_MM - totalHeight) / 2;
+                
+                // Show calculated values
+                marginTopEl.value = marginY.toFixed(1);
+                marginBottomEl.value = marginY.toFixed(1);
+                marginLeftEl.value = marginX.toFixed(1);
+                marginRightEl.value = marginX.toFixed(1);
+                
+                // Keep them disabled but visible
+                marginTopEl.disabled = true;
+                marginBottomEl.disabled = true;
+                marginLeftEl.disabled = true;
+                marginRightEl.disabled = true;
+                
+                // Update placeholders to show they're auto-calculated
+                marginTopEl.placeholder = 'auto-calculated';
+                marginBottomEl.placeholder = 'auto-calculated';
+                marginLeftEl.placeholder = 'auto-calculated';
+                marginRightEl.placeholder = 'auto-calculated';
+            } else {
+                // Enable fields for manual input
+                marginTopEl.disabled = false;
+                marginBottomEl.disabled = false;
+                marginLeftEl.disabled = false;
+                marginRightEl.disabled = false;
+                
+                // Clear auto-calculated values and show manual placeholders
+                if (marginTopEl.value && marginTopEl.placeholder === 'auto-calculated') {
+                    marginTopEl.value = '';
+                }
+                if (marginBottomEl.value && marginBottomEl.placeholder === 'auto-calculated') {
+                    marginBottomEl.value = '';
+                }
+                if (marginLeftEl.value && marginLeftEl.placeholder === 'auto-calculated') {
+                    marginLeftEl.value = '';
+                }
+                if (marginRightEl.value && marginRightEl.placeholder === 'auto-calculated') {
+                    marginRightEl.value = '';
+                }
+                
+                marginTopEl.placeholder = 'mm';
+                marginBottomEl.placeholder = 'mm';
+                marginLeftEl.placeholder = 'mm';
+                marginRightEl.placeholder = 'mm';
+            }
+        }
+
+        function previewConfiguration() {
+            alert('Preview functionality would show a visual layout preview. This could be implemented with canvas rendering.');
+        }
+
+        function renderPrintHistory() {
+            const container = document.getElementById('history-list');
+            const statsContainer = document.getElementById('history-stats');
+            
+            if (printHistory.length === 0) {
+                container.innerHTML = '<div class="history-empty"><p>No print history found. Export some PDFs to see them here!</p></div>';
+                statsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Sort by timestamp (newest first)
+            const sortedHistory = [...printHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            container.innerHTML = sortedHistory.map(record => `
+                <div class="history-item">
+                    <div class="history-item-header">
+                        <div class="history-filename">${record.filename}</div>
+                        <div class="history-timestamp">${new Date(record.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-detail"><strong>Product:</strong> ${record.productCode}${record.size}</div>
+                        <div class="history-detail"><strong>Year-Month:</strong> ${record.yearMonth}</div>
+                        <div class="history-detail"><strong>Range:</strong> ${String(record.startId).padStart(4, '0')}-${String(record.endId).padStart(4, '0')}</div>
+                        <div class="history-detail"><strong>Quantity:</strong> ${record.quantity} QR codes</div>
+                        <div class="history-detail"><strong>Pages:</strong> ${record.pages}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Calculate and display statistics
+            const totalExports = printHistory.length;
+            const totalQRs = printHistory.reduce((sum, record) => sum + record.quantity, 0);
+            const totalPages = printHistory.reduce((sum, record) => sum + record.pages, 0);
+            
+            // Find most used product
+            const productCounts = {};
+            printHistory.forEach(record => {
+                const key = `${record.productCode}${record.size}`;
+                productCounts[key] = (productCounts[key] || 0) + record.quantity;
+            });
+            const mostUsed = Object.keys(productCounts).reduce((a, b) => 
+                productCounts[a] > productCounts[b] ? a : b, '-'
+            );
+            
+            document.getElementById('stat-total-exports').textContent = totalExports;
+            document.getElementById('stat-total-qrs').textContent = totalQRs.toLocaleString();
+            document.getElementById('stat-total-pages').textContent = totalPages;
+            document.getElementById('stat-most-used').textContent = mostUsed;
+            
+            statsContainer.style.display = 'block';
+        }
+
+        function clearPrintHistory() {
+            if (confirm('Are you sure you want to clear all print history? This action cannot be undone.')) {
+                printHistory = [];
+                localStorage.removeItem('printHistory');
+                renderPrintHistory();
+            }
+        }
+
+        // Logo handling functions
+        document.getElementById('config-logo-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const logoData = event.target.result;
+                    
+                    // Show preview
+                    document.getElementById('logo-preview-img').src = logoData;
+                    document.getElementById('logo-preview').style.display = 'block';
+                    
+                    // Store in temporary variable (will be saved when Save Configuration is clicked)
+                    pdfConfig.logoData = logoData;
+                    
+                    // Enable logo checkbox
+                    document.getElementById('config-logo-enabled').checked = true;
+                    pdfConfig.logoEnabled = true;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function removeLogo() {
+            pdfConfig.logoData = null;
+            pdfConfig.logoEnabled = false;
+            document.getElementById('config-logo-enabled').checked = false;
+            document.getElementById('logo-preview').style.display = 'none';
+            document.getElementById('config-logo-upload').value = '';
+        }
+
+        // Add event listeners for configuration changes
+        document.getElementById('config-auto-margins').addEventListener('change', function() {
+            updateMarginFields();
+        });
+
+        // Add event listeners for real-time preview updates
+        ['config-rows', 'config-cols', 'config-label-width', 'config-label-height', 
+         'config-gap-horizontal', 'config-gap-vertical', 'config-qr-size'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                updateConfigPreview();
+                // Also update margins when gaps change
+                if (id === 'config-gap-horizontal' || id === 'config-gap-vertical') {
+                    updateMarginFields();
+                }
+            });
+        });
+
+        function clearQRGrid() {
+            document.getElementById('qr-grid').innerHTML = '';
+            document.getElementById('qr-container').style.display = 'none';
+            document.getElementById('pagination-container').style.display = 'none';
+            document.getElementById('export-pdf-btn').disabled = true;
+            generatedQRs = [];
+            currentPage = 1;
+            totalPages = 1;
+        }
+
+        loadProducts();
+        updateCategoryDropdown();
+        loadQRTracking();
+        loadPrintHistory();
+        loadConfiguration();
+    </script>
+</body>
+</html>
