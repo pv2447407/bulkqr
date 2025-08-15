@@ -2010,8 +2010,8 @@
             // Calculate margins
             let marginX, marginY;
             if (config.autoMargins) {
-                marginX = (A4_WIDTH_MM - totalLabelsWidth) / 2;
-                marginY = (A4_HEIGHT_MM - totalLabelsHeight) / 2;
+                marginX = (config.paperWidth - totalLabelsWidth) / 2;
+                marginY = (config.paperHeight - totalLabelsHeight) / 2;
             } else {
                 marginX = parseFloat(config.marginLeft) || 0;
                 marginY = parseFloat(config.marginTop) || 0;
@@ -2519,7 +2519,7 @@
             const qrSizeMM = (pdfConfig.labelWidth * pdfConfig.qrSize / 100);
             const totalWidth = pdfConfig.cols * pdfConfig.labelWidth + (pdfConfig.cols - 1) * pdfConfig.gapHorizontal;
             const totalHeight = pdfConfig.rows * pdfConfig.labelHeight + (pdfConfig.rows - 1) * pdfConfig.gapVertical;
-            const utilization = ((totalWidth * totalHeight) / (A4_WIDTH_MM * A4_HEIGHT_MM) * 100);
+            const utilization = ((totalWidth * totalHeight) / (pdfConfig.paperWidth * pdfConfig.paperHeight) * 100);
             
             document.getElementById('preview-per-page').textContent = labelsPerPage;
             document.getElementById('preview-label-area').textContent = `${pdfConfig.labelWidth} × ${pdfConfig.labelHeight} mm`;
@@ -2546,11 +2546,15 @@
                 const gapHorizontal = parseFloat(document.getElementById('config-gap-horizontal').value) || 0;
                 const gapVertical = parseFloat(document.getElementById('config-gap-vertical').value) || 0;
                 
+                // Get current paper dimensions (or defaults if not set)
+                const paperWidth = parseFloat(document.getElementById('config-paper-width').value) || pdfConfig.paperWidth || 210;
+                const paperHeight = parseFloat(document.getElementById('config-paper-height').value) || pdfConfig.paperHeight || 297;
+                
                 // Calculate total dimensions including gaps
                 const totalWidth = cols * labelWidth + (cols - 1) * gapHorizontal;
                 const totalHeight = rows * labelHeight + (rows - 1) * gapVertical;
-                const marginX = (A4_WIDTH_MM - totalWidth) / 2;
-                const marginY = (A4_HEIGHT_MM - totalHeight) / 2;
+                const marginX = (paperWidth - totalWidth) / 2;
+                const marginY = (paperHeight - totalHeight) / 2;
                 
                 // Show calculated values
                 marginTopEl.value = marginY.toFixed(1);
@@ -2744,11 +2748,13 @@
         // Add event listeners for paper size
         document.getElementById('config-paper-size').addEventListener('change', function() {
             toggleCustomPaperSize();
+            updateMarginFields();
             updateConfigPreview();
         });
         
         ['config-paper-width', 'config-paper-height'].forEach(id => {
             document.getElementById(id).addEventListener('input', () => {
+                updateMarginFields();
                 updateConfigPreview();
             });
         });
